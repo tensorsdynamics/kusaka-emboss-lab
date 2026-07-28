@@ -1,0 +1,42 @@
+{
+  "name": "kusaka-emboss-lab",
+  "version": "1.0.0",
+  "description": "Браузерный конструктор печатного 3D-рельефа из чёрно-белых изображений с экспортом STL и OBJ.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tensorsdynamics/kusaka-emboss-lab.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tensorsdynamics/kusaka-emboss-lab/issues"
+  },
+  "homepage": "https://tensorsdynamics.github.io/kusaka-emboss-lab/",
+  "scripts": {
+    "dev": "vite",
+    "models": "node scripts/generate-models.mjs",
+    "typecheck": "tsc --noEmit",
+    "build:app": "vite build",
+    "build": "npm run models && npm run typecheck && npm run build:app",
+    "preview": "vite preview --host 0.0.0.0 --port 4173",
+    "test": "npm run models && npm run typecheck && npm run build:app && node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "three": "0.185.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@types/three": "0.185.1",
+    "@vitejs/plugin-react": "6.0.2",
+    "sharp": "0.35.3",
+    "typescript": "5.9.3",
+    "vite": "8.1.5"
+  }
+}

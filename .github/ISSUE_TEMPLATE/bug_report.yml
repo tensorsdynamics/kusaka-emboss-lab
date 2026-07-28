@@ -1,0 +1,32 @@
+name: Сообщить о баге
+description: Ошибка интерфейса, геометрии, сборки или экспорта
+title: "[Баг] "
+labels: ["bug"]
+body:
+  - type: textarea
+    attributes:
+      label: Что произошло
+      description: Опиши фактический результат.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Как воспроизвести
+      description: Шаги, значения контролов и тип исходной картинки.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Что ожидалось
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Браузер и ОС
+      placeholder: Firefox 128, Windows 11
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Дополнительные материалы
+      description: Скриншоты и безопасный пример картинки.
