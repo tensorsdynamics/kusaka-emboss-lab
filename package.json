@@ -1,7 +1,7 @@
 {
   "name": "kusaka-emboss-lab",
-  "version": "1.0.0",
-  "description": "Браузерный конструктор печатного 3D-рельефа из чёрно-белых изображений с экспортом STL и OBJ.",
+  "version": "1.1.0",
+  "description": "Браузерный конструктор печатного 3D-рельефа из чёрно-белых изображений с двухматериальным экспортом 3MF, STL и OBJ.",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -25,6 +25,7 @@
     "test": "npm run models && npm run typecheck && npm run build:app && node --test tests/*.test.mjs"
   },
   "dependencies": {
+    "fflate": "0.8.3",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "three": "0.185.1"

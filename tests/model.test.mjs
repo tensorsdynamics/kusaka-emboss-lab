@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { strFromU8, unzipSync } from "fflate";
 import * as THREE from "three";
 import {
   processLuminanceGrid,
@@ -10,6 +11,7 @@ import {
   DEFAULT_BADGE_CONFIG,
   disposeBadgeModel,
 } from "../src/model-core.js";
+import { exportBambu3MF } from "../src/three-mf-exporter.js";
 
 function roundedSize(model) {
   const size = new THREE.Box3()
@@ -208,8 +210,82 @@ test("interpolates the printable contour between raster samples", () => {
   disposeBadgeModel(model);
 });
 
-test("ships non-empty default STL, OBJ, and raster source assets", async () => {
-  const [stl, obj, png] = await Promise.all([
+test("exports a deterministic two-filament 3MF for Bambu Studio", () => {
+  const model = createBadgeModel(
+    {
+      ...DEFAULT_BADGE_CONFIG,
+      includeRing: true,
+    },
+    {},
+    makeHeightField(16, 16),
+  );
+  const first = exportBambu3MF(model);
+  const second = exportBambu3MF(model);
+  assert.deepEqual(first, second);
+  assert.equal(String.fromCharCode(...first.subarray(0, 2)), "PK");
+
+  const archive = unzipSync(first);
+  assert.deepEqual(Object.keys(archive).sort(), [
+    "3D/3dmodel.model",
+    "Metadata/model_settings.config",
+    "Metadata/project_settings.config",
+    "[Content_Types].xml",
+    "_rels/.rels",
+  ]);
+
+  const coreModel = strFromU8(archive["3D/3dmodel.model"]);
+  const modelSettings = strFromU8(
+    archive["Metadata/model_settings.config"],
+  );
+  const projectSettings = JSON.parse(
+    strFromU8(archive["Metadata/project_settings.config"]),
+  );
+
+  assert.match(coreModel, /<basematerials id="10">/);
+  assert.match(coreModel, /object id="1"[^>]+pindex="0"/);
+  assert.match(coreModel, /object id="2"[^>]+pindex="1"/);
+  assert.match(coreModel, /<component objectid="1"\/>/);
+  assert.match(coreModel, /<component objectid="2"\/>/);
+  assert.match(coreModel, /<item objectid="20" printable="1"\/>/);
+  const baseObject = coreModel.match(
+    /<object id="1"[\s\S]*?<\/object>/,
+  )?.[0];
+  const reliefObject = coreModel.match(
+    /<object id="2"[\s\S]*?<\/object>/,
+  )?.[0];
+  assert.ok(baseObject);
+  assert.ok(reliefObject);
+  const readHeights = (xml) =>
+    [...xml.matchAll(/<vertex [^>]*z="([^"]+)"/g)].map((match) =>
+      Number(match[1]),
+    );
+  const baseHeights = readHeights(baseObject);
+  const reliefHeights = readHeights(reliefObject);
+  assert.equal(Math.max(...baseHeights), DEFAULT_BADGE_CONFIG.baseThickness);
+  assert.equal(Math.min(...reliefHeights), DEFAULT_BADGE_CONFIG.baseThickness);
+  assert.match(modelSettings, /<part id="1" subtype="normal_part">/);
+  assert.match(modelSettings, /key="extruder" value="1"/);
+  assert.match(modelSettings, /<part id="2" subtype="normal_part">/);
+  assert.match(modelSettings, /key="extruder" value="2"/);
+  assert.match(modelSettings, /key="filament_maps" value="1 2"/);
+  assert.match(
+    modelSettings,
+    /key="filament_volume_maps" value="1 1"/,
+  );
+  assert.deepEqual(projectSettings.filament_colour, [
+    "#E8E0D2",
+    "#161514",
+  ]);
+  assert.deepEqual(projectSettings.filament_type, ["PLA", "PLA"]);
+
+  disposeBadgeModel(model);
+});
+
+test("ships non-empty default 3MF, STL, OBJ, and raster assets", async () => {
+  const [threeMf, stl, obj, png] = await Promise.all([
+    readFile(
+      new URL("../public/models/kusaka-badge-88mm.3mf", import.meta.url),
+    ),
     readFile(new URL("../public/models/kusaka-badge-88mm.stl", import.meta.url)),
     readFile(
       new URL("../public/models/kusaka-badge-88mm.obj", import.meta.url),
@@ -220,6 +296,12 @@ test("ships non-empty default STL, OBJ, and raster source assets", async () => {
     ),
   ]);
 
+  const archive = unzipSync(threeMf);
+  assert.ok(archive["3D/3dmodel.model"].length > 100_000);
+  assert.match(
+    strFromU8(archive["Metadata/model_settings.config"]),
+    /key="filament_maps" value="1 2"/,
+  );
   assert.ok(stl.length > 84);
   assert.ok(stl.readUInt32LE(80) > 100_000);
   assert.match(obj, /^o badge-base$/m);

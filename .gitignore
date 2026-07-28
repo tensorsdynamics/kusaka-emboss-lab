@@ -8,3 +8,4 @@ coverage/
 !.env.example
 public/models/*.stl
 public/models/*.obj
+public/models/*.3mf

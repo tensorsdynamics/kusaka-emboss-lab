@@ -13,6 +13,7 @@ import {
   DEFAULT_BADGE_CONFIG,
   disposeBadgeModel,
 } from "../src/model-core.js";
+import { exportBambu3MF } from "../src/three-mf-exporter.js";
 
 const outputDirectory = resolve("public/models");
 const sourceImage = resolve("public/models/kusaka-emboss-source.png");
@@ -46,6 +47,9 @@ model.updateMatrixWorld(true);
 
 const stl = new STLExporter().parse(model, { binary: true });
 const obj = new OBJExporter().parse(model);
+const threeMf = exportBambu3MF(model, {
+  title: "KUSAKA emboss 88 mm",
+});
 
 await mkdir(outputDirectory, { recursive: true });
 await Promise.all([
@@ -54,8 +58,11 @@ await Promise.all([
     Buffer.from(stl.buffer, stl.byteOffset, stl.byteLength),
   ),
   writeFile(resolve(outputDirectory, "kusaka-badge-88mm.obj"), obj, "utf8"),
+  writeFile(resolve(outputDirectory, "kusaka-badge-88mm.3mf"), threeMf),
 ]);
 
 disposeBadgeModel(model);
 
-console.log("KUSAKA: создан шильдик 88 мм, общая высота 3,2 мм.");
+console.log(
+  "KUSAKA: созданы 3MF/STL/OBJ, шильдик 88 мм, общая высота 3,2 мм.",
+);

@@ -776,7 +776,7 @@
 
 .exportButtons {
   display: grid;
-  grid-template-columns: 1fr 58px;
+  grid-template-columns: 1fr 52px 52px;
   gap: 8px;
 }
 

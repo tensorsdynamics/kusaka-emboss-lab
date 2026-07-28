@@ -515,7 +515,7 @@ export default function KusakaLab() {
     controls.update();
   };
 
-  const exportModel = async (format: "stl" | "obj") => {
+  const exportModel = async (format: "3mf" | "stl" | "obj") => {
     if (!luminanceSource) {
       setExportStatus("Сначала дождись картинки");
       return;
@@ -538,7 +538,17 @@ export default function KusakaLab() {
     const filename = `emboss-${diameter}mm.${format}`;
 
     try {
-      if (format === "stl") {
+      if (format === "3mf") {
+        const { exportBambu3MF } = await import(
+          "./three-mf-exporter.js"
+        );
+        const data = exportBambu3MF(model, {
+          title: `KUSAKA emboss ${diameter} mm`,
+        });
+        const buffer = new ArrayBuffer(data.byteLength);
+        new Uint8Array(buffer).set(data);
+        downloadBlob(new Blob([buffer], { type: "model/3mf" }), filename);
+      } else if (format === "stl") {
         const { STLExporter } = await import(
           "three/examples/jsm/exporters/STLExporter.js"
         );
@@ -884,8 +894,8 @@ export default function KusakaLab() {
           <div>
             <strong>Базовый рецепт</strong>
             <p>
-              Сопло 0.4 · слой 0.2 · 3 стенки · смена филамента после{" "}
-              {stats.filamentSwapHeight.toFixed(1)} мм.
+              3MF: основа → F1 · рельеф → F2. Сопоставь катушки AMS
+              перед печатью.
             </p>
           </div>
         </section>
@@ -895,11 +905,18 @@ export default function KusakaLab() {
             <button
               className={styles.primaryExport}
               disabled={!heightField}
+              onClick={() => exportModel("3mf")}
+              type="button"
+            >
+              <span>3MF · AMS</span>
+              <b>↓</b>
+            </button>
+            <button
+              disabled={!heightField}
               onClick={() => exportModel("stl")}
               type="button"
             >
-              <span>Скачать STL</span>
-              <b>↓</b>
+              STL
             </button>
             <button
               disabled={!heightField}
@@ -919,7 +936,8 @@ export default function KusakaLab() {
             <span>{source.custom ? "Своя маска" : "KUSAKA default"}</span>
           </div>
           <p aria-live="polite" className={styles.exportStatus}>
-            {exportStatus || "Экспорт использует текущую маску и Levels"}
+            {exportStatus ||
+              `3MF: F1 / F2 · STL: смена после ${stats.filamentSwapHeight.toFixed(1)} мм`}
           </p>
         </div>
       </aside>

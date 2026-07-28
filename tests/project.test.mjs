@@ -14,7 +14,7 @@ test("production-сборка содержит самостоятельный KU
   assert.match(html, /<html lang="ru">/);
   assert.match(html, /KUSAKA Raster Emboss Lab/);
   assert.match(source, /Подгони пикчу под пластик/);
-  assert.match(source, /Скачать STL/);
+  assert.match(source, /3MF · AMS/);
   assert.match(packageJson, /"name": "kusaka-emboss-lab"/);
   assert.match(readme, /Быстрый запуск/);
   assert.doesNotMatch(source, /Bus Farting|Telegram/i);
@@ -23,6 +23,7 @@ test("production-сборка содержит самостоятельный KU
 
   await Promise.all([
     access(new URL("../dist/models/kusaka-emboss-source.png", import.meta.url)),
+    access(new URL("../dist/models/kusaka-badge-88mm.3mf", import.meta.url)),
     access(new URL("../dist/models/kusaka-badge-88mm.stl", import.meta.url)),
     access(new URL("../dist/models/kusaka-badge-88mm.obj", import.meta.url)),
   ]);
